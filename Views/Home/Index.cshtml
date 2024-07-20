@@ -1,0 +1,27 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<main class="flex-column align-items-center d-flex justify-content-center" style="height: 70vh;">
+    <h1>
+        Welcome 2 uChat
+    </h1>
+    <form onsubmit="handleSubmit(event)" style="width: 100%; max-width: 480px;" class="flex-column w-100 d-flex gap-4">
+        <div class="form-group d-flex flex-column gap-2">
+			<label for="username">UserName</label>
+			<input type="text" class="form-control" id="username" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Join</button>
+    </form> 
+</main>
+
+<script>
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        const username = document.getElementById('username').value;
+        localStorage.setItem("username", username);
+        window.location.href = "/chat";
+    }
+
+    localStorage.getItem("username") ? window.location.href = "/chat" : null;
+</script>

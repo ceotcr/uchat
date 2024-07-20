@@ -1,0 +1,78 @@
+﻿@* For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860 *@
+@{
+    ViewData["Title"] = $"GroupChat | {ViewData["roomid"]}";
+}
+
+
+<main style="height: calc(100vh - 10rem);">
+
+
+    <ul id="chats" style="overflow-y: scroll; height: 100%; border: #f1f1f1 1px solid; width:100%; max-width:512px;" class="mx-auto d-flex flex-column justify-content-end p-4 list-unstyled gap-2 rounded-2">
+
+    </ul>
+
+    <div class="d-flex align-items-start mx-auto" style="width:calc(100% - 2rem); max-width: 512px; position:fixed; bottom:1rem; left:50%;transform: translateX(-50%);">
+        <input class="form-control px-4 py-3" style="border-radius: 0.5rem 0 0 0.5rem" type="text" name="message" id="message" required placeholder="start typing... ">
+        <button class="btn btn-primary px-4 py-3" style="border-radius: 0 0.5rem 0.5rem 0" id="sub" type="submit">></button>
+    </div>
+
+</main>
+<script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
+<script>
+    const conn = new signalR.HubConnectionBuilder().withUrl("/chathub").build();
+    const username = localStorage.getItem("username");
+    const roomid = "@(ViewData["roomid"])";
+
+    const joinGr = async () => {
+        await conn.invoke("JoinGroup", roomid, username);
+    };
+
+    const submitBtn = document.getElementById("sub");
+    const messageInput = document.getElementById("message");
+    const chats = document.getElementById("chats");
+
+    submitBtn.disabled = true;
+
+    const sendMessage = async (e) => {
+        e.preventDefault();
+        const message = messageInput.value;
+        if (message.trim() === "") return;
+
+        await conn.invoke("SendMessageToGroup", roomid, username, message);
+        messageInput.value = "";
+    };
+
+    submitBtn.addEventListener("click", sendMessage);
+
+    conn.on("ReceiveGroupMessage", function (user, message) {
+        const li = document.createElement("li");
+            li.style.color = "white"
+            li.style.maxWidth = "360px"
+            li.style.width = "fit-content"
+        if (user == "System") {
+            li.style.color = "red";
+            li.innerText = message;
+            li.style.marginInline = "auto"
+            li.style.textAlign = "center"
+        }
+        else if (user == username) {
+            li.style.alignSelf = "flex-end";
+            li.innerText = message;
+            li.style.padding = "0.5rem 1rem";
+            li.style.borderRadius = "5rem 0 5rem 5rem";
+            li.style.backgroundColor = "#6320EE"
+		}
+		else {
+            li.innerText = `${user} says ${message}`;
+            li.style.padding = "0.5rem 1rem";
+            li.style.borderRadius = "0 5rem 5rem 5rem";
+            li.style.backgroundColor = "#9270FF"
+        }
+        chats.appendChild(li);
+    });
+
+    conn.start().then(() => {
+        joinGr();
+        submitBtn.disabled = false;
+    });
+</script>
